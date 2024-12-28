@@ -16,6 +16,7 @@ This project uses a Convolutional Neural Network (CNN) to classify images of var
   - NumPy
   - Pandas
   - scikit-learn
+  - Pysimplegui
 
 ## How to Run
 

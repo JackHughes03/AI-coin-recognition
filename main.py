@@ -19,71 +19,101 @@ def load_model():
     
     # Load model
     if not os.path.exists("coin_model.h5"):
-        print(f"{Colors.RED}Error: Model file 'coin_model.h5' not found{Colors.RESET}")
+        print(f"Error: Model file 'coin_model.h5' not found")
         return
     else:
         model = tf.keras.models.load_model("coin_model.h5")
-        print(f"{Colors.GREEN}Model loaded successfullyf{Colors.RESET}")
+        print(f"Model loaded successfully")
     
     # Load label mapping
     if not os.path.exists('label_mapping.json'):
-        print(f"{Colors.RED}Error: Label mapping file 'label_mapping.json' not found{Colors.RESET}")
+        print(f"Error: Label mapping file 'label_mapping.json' not found")
         return
     else:        
         with open('label_mapping.json', 'r') as f:
             label_to_index = json.load(f)
             
-            print(f"{Colors.GREEN}Map json loaded successfullyf{Colors.RESET}")
+            print(f"Map json loaded successfullyf")
             
     print("Passing back to test func ")
         
     return model, label_to_index
         
 
-def test():
-    print("Loading model...")
+def test(img_path):
+    print("\n" + "="*50)
+    print("STARTING COIN DETECTION PROCESS")
+    print("="*50 + "\n")
+    
+    print("LOADING MODEL AND DEPENDENCIES")
+    print("-"*30)
     
     # Load the model
-    print("Attempting to load model")
+    print("Attempting to load model...")
     model, label_to_index = load_model()
     
     if model is None or label_to_index is None:
-        print(f"{Colors.RED}Error: Model and/or map did not pass back corectly{Colors.RESET}")
+        print("Error: Model and/or map did not load correctly")
+        return
     else:
-        print(f"{Colors.GREEN}Model & map passed back correctly{Colors.RESET}")
+        print("Model & map loaded successfully")
     
     # Create reverse mapping
     index_to_label = {str(v): k for k, v in label_to_index.items()}
-    print(f"{Colors.GREEN}Label mapping loaded successfullyf{Colors.RESET}")
+    print("Label mapping created")
     
-    print("Loading image...")
+    print("\nPROCESSING IMAGE")
+    print("-"*30)
+    print(f"Image path: {img_path}")
+    
     IMG_SIZE = 100
-    img_path = "dataset/test/17/026__10 Pence_united_kingdom.jpg"
     
     # Check if image exists
     if not os.path.exists(img_path):
-        print(f"{Colors.RED}Error: Image not found at path: {img_path}{Colors.RESET}")
+        print(f"Error: Image not found at path: {img_path}")
         return
     else:
-        print(f"{Colors.GREEN}Image found{Colors.RESET}")
+        print("Image file found")
         
+    print("Loading image into memory...")
     img_array = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
     if img_array is None:
-        print(f"{Colors.RED}Error: Failed to load image at {img_path}{Colors.RESET}")
+        print(f"Error: Failed to load image at {img_path}")
         return
     else:
-        print(f"{Colors.GREEN}Loaded image{Colors.RESET}")
-        
-    img_array = cv2.resize(img_array, (IMG_SIZE, IMG_SIZE))
-    img_array = np.array([img_array])  # Add batch dimension
-    img_array = img_array.reshape(-1, IMG_SIZE, IMG_SIZE, 1)  # Reshape for model
-    img_array = img_array / 255.0  # Normalize
+        print("Image loaded successfully")
     
-    predictions = model.predict(img_array)
+    print("\nPREPARING IMAGE")
+    print("-"*30)    
+    print("Resizing image...")
+    img_array = cv2.resize(img_array, (IMG_SIZE, IMG_SIZE))
+    print(f"Image resized to {IMG_SIZE}x{IMG_SIZE}")
+    
+    print("Adding batch dimension...")
+    img_array = np.array([img_array])
+    print("Batch dimension added")
+    
+    print("Reshaping image...")
+    img_array = img_array.reshape(-1, IMG_SIZE, IMG_SIZE, 1)
+    print("Image reshaped for model input")
+    
+    print("Normalizing pixel values...")
+    img_array = img_array / 255.0
+    print("Image normalized")
+    
+    print("\nMAKING PREDICTION")
+    print("-"*30)
+    print("Running model inference...")
+    predictions = model.predict(img_array, verbose=0)
     predicted_class = np.argmax(predictions)
     predicted_label = index_to_label[str(predicted_class)]
+    confidence = float(predictions[0][predicted_class]) * 100
     
-    print(f"\n\n{Colors.GREEN}**** Predicted: {predicted_label} **** \n\n{Colors.RESET}")
+    print("Prediction complete!")
+    print("\n" + "="*50)
+    print(f"RESULT: {predicted_label}")
+    print(f"Confidence: {confidence:.2f}%")
+    print("="*50 + "\n")
     
 
 def train():
@@ -200,27 +230,9 @@ def evaluate():
     print("Evaluation function called")
     
 
+
 if __name__ == "__main__":
     print("\n******* Project started *******")
     
-    choice = input("\n1 - Train\n2 - Test\n3 - Evaluate\nEnter: ")
-
-    if choice == "1":
-        print("\nInitializing training, calling train function")
-        
-        print("You sure? (y/n): ")
-        choice = input()
-        if choice == "y":
-            train()
-        else:
-            print("Training cancelled")
-    elif choice == "2":
-        print("\nInitializing testing, calling test function")
-        test()
-        
-    elif choice == "3":
-        print("\nCalling evaluation function")
-        evaluate()
-        
-    else:
-        print("Invalid choice")
+    import gui
+    gui.main()
