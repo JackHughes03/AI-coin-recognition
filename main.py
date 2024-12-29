@@ -8,6 +8,7 @@ from keras.models import Sequential
 from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense
 import tensorflow as tf
 from sklearn.preprocessing import LabelEncoder
+import threading
 
 class Colors:
     RED = '\033[31m'
@@ -35,7 +36,7 @@ def load_model():
             
             print(f"Map json loaded successfullyf")
             
-    print("Passing back to test func ")
+    print("Passing back to test func")
         
     return model, label_to_index
         
@@ -115,6 +116,12 @@ def test(img_path):
     print(f"Confidence: {confidence:.2f}%")
     print("="*50 + "\n")
     
+def train_model(model, X_train, y_train, X_test, y_test):
+    history = model.fit(X_train, y_train,
+                    epochs=10,
+                    validation_data=(X_test, y_test))
+    
+    return history
 
 def train():
     print("Training func called")
@@ -152,6 +159,7 @@ def train():
         coin_name = coin_names[str(i)]
         
         # Assign numerical label
+        print("Assigning numerical label (" + str(i) + "/211)")
         if coin_name not in label_to_index:
             label_to_index[coin_name] = current_label
             current_label += 1
@@ -176,17 +184,20 @@ def train():
     print(f"Data read successfully. Total samples: {len(training_data)}")
     
     # Prepare data for training
+    print("Preparing data for training")
     X = np.array([i[0] for i in training_data]).reshape(-1, IMG_SIZE, IMG_SIZE, 1)
     y = np.array([i[1] for i in training_data])
     
     # Normalize pixel values
     X = X / 255.0
     
+    print("Splitting data")
     # Split data
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     
     print("Data split successfully")
     
+    print("Creating model")
     # Create model
     model = Sequential([
         Conv2D(64, (3, 3), activation='relu', input_shape=(IMG_SIZE, IMG_SIZE, 1)),
@@ -201,6 +212,7 @@ def train():
     print("Model created successfully")
     
     # Compile model
+    print("Compiling model")
     model.compile(optimizer='adam',
                  loss='sparse_categorical_crossentropy',
                  metrics=['accuracy'])
@@ -208,9 +220,9 @@ def train():
     print("Model compiled successfully")
     
     # Train model
-    history = model.fit(X_train, y_train,
-                       epochs=10,
-                       validation_data=(X_test, y_test))
+    print("Training model")
+    training_thread = threading.Thread(target=train_model(model, X_train, y_train, X_test, y_test))
+    training_thread.start()
     
     print("Model trained successfully")
     
@@ -229,7 +241,8 @@ def train():
 def evaluate():
     print("Evaluation function called")
     
-
+    
+    
 
 if __name__ == "__main__":
     print("\n******* Project started *******")

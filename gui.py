@@ -23,7 +23,6 @@ def handle_upload_image():
     filename = sg.popup_get_file('Choose an image file', file_types=(("Image Files", "*.png;*.jpg;*.jpeg"),))
     if filename:
         print(f"Image uploaded: {filename}")
-        # Run test in a separate thread
         threading.Thread(target=test, args=(filename,), daemon=True).start()
     return None
 
@@ -65,7 +64,9 @@ def main():
                 background_color=COLORS['background'],
                 pad=((0, 0), (0, STYLES['padding']*2)))],
         
-        [sg.Button('Upload Image', **button_style)],
+        [sg.Button('Upload Image', **button_style),
+         sg.Button('Train Model', **button_style),
+         sg.Button('Evaluate Model', **button_style)],
          
         [sg.Multiline(size=(60, 15), 
                      font=('Courier', 10),
@@ -118,7 +119,12 @@ def main():
         
         if event == 'Upload Image':
             handle_upload_image()
-
+        elif event == 'Train Model':
+            print('Not ready. Choose another option')
+            # handle_train_model()
+        elif event == 'Evaluate Model':
+            # handle_evaluate_model()
+            print('Not ready. Choose another option')
     window.close()
 
 if __name__ == '__main__':
