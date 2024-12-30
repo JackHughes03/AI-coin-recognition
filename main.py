@@ -115,13 +115,7 @@ def test(img_path):
     print(f"RESULT: {predicted_label}")
     print(f"Confidence: {confidence:.2f}%")
     print("="*50 + "\n")
-    
-def train_model(model, X_train, y_train, X_test, y_test):
-    history = model.fit(X_train, y_train,
-                    epochs=10,
-                    validation_data=(X_test, y_test))
-    
-    return history
+
 
 def train():
     print("Training func called")
@@ -198,31 +192,68 @@ def train():
     print("Data split successfully")
     
     print("Creating model")
-    # Create model
+    # Create a more sophisticated model architecture
     model = Sequential([
-        Conv2D(64, (3, 3), activation='relu', input_shape=(IMG_SIZE, IMG_SIZE, 1)),
+        # First convolutional block
+        Conv2D(32, (3, 3), activation='relu', padding='same', input_shape=(IMG_SIZE, IMG_SIZE, 1)),
+        Conv2D(32, (3, 3), activation='relu', padding='same'),
         MaxPooling2D((2, 2)),
-        Conv2D(128, (3, 3), activation='relu'),
+        
+        # Second convolutional block
+        Conv2D(64, (3, 3), activation='relu', padding='same'),
+        Conv2D(64, (3, 3), activation='relu', padding='same'),
         MaxPooling2D((2, 2)),
+        
+        # Third convolutional block
+        Conv2D(128, (3, 3), activation='relu', padding='same'),
+        Conv2D(128, (3, 3), activation='relu', padding='same'),
+        MaxPooling2D((2, 2)),
+        
+        # Dense layers
         Flatten(),
+        Dense(256, activation='relu'),
+        tf.keras.layers.Dropout(0.5),  # Add dropout to prevent overfitting
         Dense(128, activation='relu'),
+        tf.keras.layers.Dropout(0.3),
         Dense(len(label_to_index), activation='softmax')
     ])
     
-    print("Model created successfully")
+    # Use learning rate scheduling
+    initial_learning_rate = 0.001
+    lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
+        initial_learning_rate, decay_steps=1000, decay_rate=0.9
+    )
     
-    # Compile model
+    # Compile model with better optimizer settings
     print("Compiling model")
-    model.compile(optimizer='adam',
-                 loss='sparse_categorical_crossentropy',
-                 metrics=['accuracy'])
+    model.compile(
+        optimizer=tf.keras.optimizers.Adam(learning_rate=lr_schedule),
+        loss='sparse_categorical_crossentropy',
+        metrics=['accuracy']
+    )
     
-    print("Model compiled successfully")
+    # Add data augmentation
+    data_augmentation = tf.keras.Sequential([
+        tf.keras.layers.RandomRotation(0.2),
+        tf.keras.layers.RandomZoom(0.2),
+        tf.keras.layers.RandomBrightness(0.2),
+    ])
     
-    # Train model
+    # Train model with more epochs and early stopping
     print("Training model")
-    training_thread = threading.Thread(target=train_model(model, X_train, y_train, X_test, y_test))
-    training_thread.start()
+    early_stopping = tf.keras.callbacks.EarlyStopping(
+        monitor='val_accuracy',
+        patience=5,
+        restore_best_weights=True
+    )
+    
+    history = model.fit(
+        X_train, y_train,
+        epochs=30,  # Increased epochs
+        batch_size=32,
+        validation_data=(X_test, y_test),
+        callbacks=[early_stopping]
+    )
     
     print("Model trained successfully")
     
@@ -247,5 +278,7 @@ def evaluate():
 if __name__ == "__main__":
     print("\n******* Project started *******")
     
-    import gui
-    gui.main()
+    # import gui
+    # gui.main()
+    
+    train()
