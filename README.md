@@ -18,6 +18,8 @@ This project uses a Convolutional Neural Network (CNN) to classify images of var
   - scikit-learn
   - Pysimplegui
 
+Or just run the requirements.txt
+
 ## How to Run
 
 1. Install required packages using Conda (recommended for better TensorFlow compatibility)
@@ -36,18 +38,8 @@ This project uses a Convolutional Neural Network (CNN) to classify images of var
 
 5. Running the model:
    - Execute `main.py`
-   - Choose 'train' out of the three options
-   - Let it train the model
-
-6. For testing custom images:
-   - Modify line 61 in `main.py` with your image path
-   - Run `main.py` and select the test option
+   - Choose train and wait till the process is finished
 
 ## Model Architecture
 
-The CNN model consists of:
-- 2 Convolutional layers
-- 2 MaxPooling layers
-- Dense layers for classification
-- Trained on grayscale images (100x100 pixels)
-- Highly experimental and way more depth and focus to come
+TBC
