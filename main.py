@@ -112,15 +112,17 @@ def test():
     
     print(f"{Fore.GREEN}Prediction complete!{Style.RESET_ALL}")
     print("\n" + "="*50)
+    
+    if confidence < 70:
+        print(f"{Fore.RED}WARNING: Model is NOT confident. Consider retraining if this issue persists amongst other coins.{Style.RESET_ALL}")
+        
     print(f"{Fore.GREEN}RESULT: {Style.BRIGHT}{predicted_label}{Style.RESET_ALL}")
     print(f"{Fore.GREEN}Confidence: {Style.BRIGHT}{confidence:.2f}%{Style.RESET_ALL}")
     print("="*50 + "\n")
 
 
 def train():
-    print("Training called")
-    
-    print("Categorising data")
+    print("Training called\nCategorising data")
     
     dataset_dir = "dataset"
     categories = ["train", "test"]
