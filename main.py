@@ -163,7 +163,7 @@ def train():
             label_to_index[coin_name] = current_label
             current_label += 1
             
-            print(f"{Fore.GREEN}Label {current_label} assigned to {coin_name}{Style.RESET_ALL}")
+            print(f"{Fore.GREEN}Assigning label {current_label}/211{Style.RESET_ALL}", end='\r', flush=True)
             
         for img in os.listdir(path):
             try:
@@ -178,6 +178,7 @@ def train():
                 print(f"Error processing {img_path}: {str(e)}")
                 continue
     
+    print()  # Add this after the loop to move to next line
     if len(training_data) == 0:
         print("No training data found")
         return
