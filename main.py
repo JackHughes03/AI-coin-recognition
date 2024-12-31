@@ -224,7 +224,7 @@ def train():
     print(f"{Fore.GREEN}Starting optimized training...{Style.RESET_ALL}")
     history = model.fit(
         X_train, y_train,
-        epochs=10,
+        epochs=100,
         batch_size=32,
         validation_data=(X_test, y_test),
         callbacks=[early_stopping]
