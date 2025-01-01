@@ -35,4 +35,3 @@ find roman_coins -type f -name "*.png" | sort | while read -r file; do
 done
 
 rm -rf roman_coins
-rm -rf 
