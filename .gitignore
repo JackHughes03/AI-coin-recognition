@@ -1,9 +1,10 @@
 dataset/
 *.h5
-*.json
 note_to_self.txt
 *.pyc
 gui.py
 *.png
 *.keras
 *.h5
+*.DS_Store
+label_mapping.json

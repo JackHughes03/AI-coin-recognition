@@ -10,6 +10,7 @@ import tensorflow as tf
 from sklearn.preprocessing import LabelEncoder
 from colorama import init, Fore, Style
 import matplotlib.pyplot as plt
+from tkinter import filedialog as fd
 
 init(autoreset=True)  # Initialize colorama
     
@@ -47,7 +48,7 @@ def test():
     print(f"{Fore.CYAN}LOADING MODEL AND DEPENDENCIES{Style.RESET_ALL}")
     print("-"*30)
     
-    img_path = input(f"{Fore.YELLOW}Enter the path to the image file: {Style.RESET_ALL}")
+    img_path = fd.askopenfilename()
     
     # Load the model
     print(f"{Fore.CYAN}Attempting to load model...{Style.RESET_ALL}")
@@ -143,7 +144,7 @@ def test():
             color = Fore.YELLOW
         else:
             color = Fore.RED
-            
+        
         print(f"{color}{coin}: {Style.BRIGHT}{conf:.3f}%{Style.RESET_ALL}")
     
     # Show remaining percentage if any
@@ -187,7 +188,7 @@ def train():
     label_to_index = {}
     current_label = 0
     
-    for i in range(1, 212):
+    for i in range(1, 272):
         path = os.path.join(dataset_dir, categories[0], str(i))
         coin_name = coin_names[str(i)]
         
@@ -196,9 +197,13 @@ def train():
             label_to_index[coin_name] = current_label
             current_label += 1
             
-            print(f"{Fore.GREEN}Assigning label {current_label}/211{Style.RESET_ALL}", end='\r', flush=True)
+            print(f"{Fore.GREEN}Assigning label {current_label}/271{Style.RESET_ALL}", end='\r', flush=True)
             
         for img in os.listdir(path):
+            # Skip .DS_Store and other hidden files
+            if img.startswith('.'):
+                continue
+            
             try:
                 img_path = os.path.join(path, img)
                 img_array = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
@@ -299,22 +304,27 @@ def preprocess_image(img_array, IMG_SIZE=100):
 
 
 if __name__ == "__main__":
-    print(f"{Fore.YELLOW}=== Coin Classification System ==={Style.RESET_ALL}")
-    print(f"{Fore.CYAN}Select operation mode:{Style.RESET_ALL}")
+    print(f"\n{Fore.YELLOW}=== Coin Classification System ==={Style.RESET_ALL}")
     
-    choice = input("\n1 - Train\n2 - Test\nEnter: ")
-    if choice == "1":
-        print(f"{Fore.CYAN}Initializing training, calling train function{Style.RESET_ALL}")
-        
-        print(f"{Fore.YELLOW}You sure? (y/n): {Style.RESET_ALL}")
-        choice = input()
-        if choice == "y":
-            train()
-        else:
-            print("Training cancelled")
-    elif choice == "2":
-        print("\nInitializing testing, calling test function")
-        test()
+    if not os.path.exists('dataset'):
+        print(f"\n\n{Fore.RED}Error: Dataset not found. Run install.sh to create the dataset.{Style.RESET_ALL}\n\n")
         
     else:
-        print("Invalid choice")
+        print(f"{Fore.CYAN}Select operation mode:{Style.RESET_ALL}")
+        
+        choice = input("\n1 - Train\n2 - Test\nEnter: ")
+        if choice == "1":
+            print(f"{Fore.CYAN}Initializing training, calling train function{Style.RESET_ALL}")
+            
+            print(f"{Fore.YELLOW}You sure? (y/n): {Style.RESET_ALL}")
+            choice = input()
+            if choice == "y":
+                train()
+            else:
+                print("Training cancelled")
+        elif choice == "2":
+            print("\nInitializing testing, calling test function")
+            test()
+            
+        else:
+            print("Invalid choice")
