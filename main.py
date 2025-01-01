@@ -106,19 +106,34 @@ def test():
     print("-"*30)
     print("Running model inference...")
     predictions = model.predict(img_array, verbose=0)
-    predicted_class = np.argmax(predictions)
-    predicted_label = index_to_label[str(predicted_class)]
-    confidence = float(predictions[0][predicted_class]) * 100
+    
+    # Get top predictions sorted by confidence
+    top_predictions = []
+    for idx, confidence in enumerate(predictions[0]):
+        coin_name = index_to_label[str(idx)]
+        confidence_percent = float(confidence) * 100
+        top_predictions.append((coin_name, confidence_percent))
+    
+    # Sort predictions by confidence (highest first)
+    top_predictions.sort(key=lambda x: x[1], reverse=True)
+    
+    # Get the highest confidence prediction
+    predicted_label, confidence = top_predictions[0]
     
     print(f"{Fore.GREEN}Prediction complete!{Style.RESET_ALL}")
     print("\n" + "="*50)
     
     if confidence < 70:
         print(f"{Fore.RED}WARNING: Model is NOT confident. Consider retraining if this issue persists amongst other coins.{Style.RESET_ALL}")
-        
-    print(f"{Fore.GREEN}RESULT: {Style.BRIGHT}{predicted_label}{Style.RESET_ALL}")
-    print(f"{Fore.GREEN}Confidence: {Style.BRIGHT}{confidence:.2f}%{Style.RESET_ALL}")
-    print("="*50 + "\n")
+    
+    print(f"\n{Fore.GREEN}Top Predictions:{Style.RESET_ALL}")
+    # Show top 3 predictions or all if confidence is low
+    num_predictions = 3 if confidence >= 70 else 5
+    for coin, conf in top_predictions[:num_predictions]:
+        if conf > 1:  # Only show predictions with >1% confidence
+            print(f"{Fore.CYAN}{coin}: {Style.BRIGHT}{conf:.2f}%{Style.RESET_ALL}")
+    
+    print("\n" + "="*50 + "\n")
 
 
 def train():
@@ -225,7 +240,7 @@ def train():
     print(f"{Fore.GREEN}Starting optimized training...{Style.RESET_ALL}")
     history = model.fit(
         X_train, y_train,
-        epochs=100,
+        epochs=30,
         batch_size=32,
         validation_data=(X_test, y_test),
         callbacks=[early_stopping]
@@ -233,13 +248,18 @@ def train():
     
     print("Model trained successfully")
     
-    model_path = "model.keras"
-    model.save(model_path)
+    print("Saving model...")
+    tf.keras.models.save_model(
+        model,
+        "model.keras",
+        save_format='tf',
+        include_optimizer=True
+    )
     
     with open('label_mapping.json', 'w') as f:
         json.dump(label_to_index, f)
     
-    print(f"Model saved to {model_path}")
+    print(f"Model saved to model.keras")
     print("Label mapping saved to label_mapping.json")
     
     # Plot training history
