@@ -126,12 +126,30 @@ def test():
     if confidence < 70:
         print(f"{Fore.RED}WARNING: Model is NOT confident. Consider retraining if this issue persists amongst other coins.{Style.RESET_ALL}")
     
-    print(f"\n{Fore.GREEN}Top Predictions:{Style.RESET_ALL}")
-    # Show top 3 predictions or all if confidence is low
-    num_predictions = 3 if confidence >= 70 else 5
-    for coin, conf in top_predictions[:num_predictions]:
-        if conf > 1:  # Only show predictions with >1% confidence
-            print(f"{Fore.CYAN}{coin}: {Style.BRIGHT}{conf:.2f}%{Style.RESET_ALL}")
+    print(f"\n{Fore.GREEN}Prediction Breakdown:{Style.RESET_ALL}")
+    
+    # Show all predictions above 0.01%
+    threshold = 0.01  # 0.01% threshold
+    significant_predictions = [(coin, conf) for coin, conf in top_predictions if conf > threshold]
+    
+    # Calculate total shown percentage
+    total_shown = sum(conf for _, conf in significant_predictions)
+    
+    # Print predictions with different colors based on confidence
+    for coin, conf in significant_predictions:
+        if conf >= 70:
+            color = Fore.GREEN
+        elif conf >= 30:
+            color = Fore.YELLOW
+        else:
+            color = Fore.RED
+            
+        print(f"{color}{coin}: {Style.BRIGHT}{conf:.3f}%{Style.RESET_ALL}")
+    
+    # Show remaining percentage if any
+    remaining = 100 - total_shown
+    if remaining > 0:
+        print(f"{Fore.CYAN}Other possibilities: {Style.BRIGHT}{remaining:.3f}%{Style.RESET_ALL}")
     
     print("\n" + "="*50 + "\n")
 
