@@ -15,6 +15,7 @@ The current model was trained on a dataset consisting of a mixture of:
 - Python 3.x
 - Conda (recommended for TensorFlow installation)
 - Required packages:
+
   - Tensorflow
   - Scikit-learn
   - Pandas
@@ -27,11 +28,13 @@ The current model was trained on a dataset consisting of a mixture of:
 
 ## How to run
 
-1. Install the requirements.txt
+1. Clone this project
 
-2. Create the dataset by running the install.sh bash script. It will install and format the datasets for you.
+2. Install the requirements.txt
 
-5. Running the model:
+3. Create the dataset by running the install.sh bash script. It will install and format the datasets for you.
+
+4. Running the model:
    - Execute `main.py`
    - Choose train and wait till the process is finished
 
