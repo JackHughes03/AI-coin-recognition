@@ -307,8 +307,14 @@ if __name__ == "__main__":
     print(f"\n{Fore.YELLOW}=== Coin Classification System ==={Style.RESET_ALL}")
     
     if not os.path.exists('dataset'):
-        print(f"\n\n{Fore.RED}Error: Dataset not found. Run install.sh to create the dataset.{Style.RESET_ALL}\n\n")
+        print(f"\n\n{Fore.RED}Error: Dataset not found. Run install.sh to install the dataset.{Style.RESET_ALL}\n\n")
         
+        runinstall = input("Run install.sh? (y/n): ")
+        if runinstall == "y":
+            os.system("bash install.sh")
+        else:
+            print("Exiting...")
+            exit()
     else:
         print(f"{Fore.CYAN}Select operation mode:{Style.RESET_ALL}")
         
@@ -328,3 +334,4 @@ if __name__ == "__main__":
             
         else:
             print("Invalid choice")
+            
