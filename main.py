@@ -158,6 +158,15 @@ def test():
 def train():
     print("Training called\nCategorising data")
     
+    if os.path.exists("model.keras"):
+        print("Model already exists, deleting model.keras")
+        os.remove("model.keras")
+        print("Model deleted")
+        
+    if os.path.exists("label_mapping.json"):
+        print("Label mapping already exists, deleting label_mapping.json")
+        os.remove("label_mapping.json")
+        print("Label mapping deleted")
     dataset_dir = "dataset"
     categories = ["train", "test"]
     name_of_coin_file = "cat_to_name.json"
@@ -188,7 +197,7 @@ def train():
     label_to_index = {}
     current_label = 0
     
-    for i in range(1, 272):
+    for i in range(1, 212):
         path = os.path.join(dataset_dir, categories[0], str(i))
         coin_name = coin_names[str(i)]
         
@@ -197,7 +206,7 @@ def train():
             label_to_index[coin_name] = current_label
             current_label += 1
             
-            print(f"{Fore.GREEN}Assigning label {current_label}/271{Style.RESET_ALL}", end='\r', flush=True)
+            print(f"{Fore.GREEN}Assigning label {current_label}/211{Style.RESET_ALL}", end='\r', flush=True)
             
         for img in os.listdir(path):
             # Skip .DS_Store and other hidden files
