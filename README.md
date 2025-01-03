@@ -44,3 +44,6 @@ This classification model was built using a Convolutional Neural Network (CNN). 
 
 ## Model Results
 <img src="metrics/Accuracy.png">
+
+## Contributors
+[WarningImHack3r](https://github.com/WarningImHack3r) - For his consistant help with faster training and testing.
