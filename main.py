@@ -6,6 +6,7 @@ import json
 from sklearn.model_selection import train_test_split
 from keras.models import Sequential
 from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout, BatchNormalization
+from keras.applications import MobileNet
 import tensorflow as tf
 from sklearn.preprocessing import LabelEncoder
 from colorama import init, Fore, Style
@@ -17,7 +18,6 @@ init(autoreset=True)  # Initialize colorama
 def load_model():
     print(f"{Fore.CYAN}Model loading{Style.RESET_ALL}")
     
-    # Load model
     if not os.path.exists("model.keras"):
         print(f"{Fore.RED}Error: Model file 'model.keras' not found{Style.RESET_ALL}")
         return
@@ -25,7 +25,6 @@ def load_model():
         model = tf.keras.models.load_model("model.keras")
         print(f"{Fore.GREEN}Model loaded successfully{Style.RESET_ALL}")
     
-    # Load label mapping
     if not os.path.exists('label_mapping.json'):
         print(f"{Fore.RED}Error: Label mapping file 'label_mapping.json' not found{Style.RESET_ALL}")
         return
@@ -50,7 +49,6 @@ def test():
     
     img_path = fd.askopenfilename()
     
-    # Load the model
     print(f"{Fore.CYAN}Attempting to load model...{Style.RESET_ALL}")
     model, label_to_index = load_model()
     
@@ -60,7 +58,6 @@ def test():
     else:
         print(f"{Fore.GREEN}Model & map loaded successfully{Style.RESET_ALL}")
     
-    # Create reverse mapping
     index_to_label = {str(v): k for k, v in label_to_index.items()}
     print(f"{Fore.GREEN}Label mapping created{Style.RESET_ALL}")
     
@@ -70,7 +67,6 @@ def test():
     
     IMG_SIZE = 100
     
-    # Check if image exists
     if not os.path.exists(img_path):
         print(f"{Fore.RED}Error: Image not found at path: {img_path}{Style.RESET_ALL}")
         return
@@ -108,17 +104,14 @@ def test():
     print("Running model inference...")
     predictions = model.predict(img_array, verbose=0)
     
-    # Get top predictions sorted by confidence
     top_predictions = []
     for idx, confidence in enumerate(predictions[0]):
         coin_name = index_to_label[str(idx)]
         confidence_percent = float(confidence) * 100
         top_predictions.append((coin_name, confidence_percent))
     
-    # Sort predictions by confidence (highest first)
     top_predictions.sort(key=lambda x: x[1], reverse=True)
     
-    # Get the highest confidence prediction
     predicted_label, confidence = top_predictions[0]
     
     print(f"{Fore.GREEN}Prediction complete!{Style.RESET_ALL}")
@@ -129,14 +122,10 @@ def test():
     
     print(f"\n{Fore.GREEN}Prediction Breakdown:{Style.RESET_ALL}")
     
-    # Show all predictions above 0.01%
-    threshold = 0.01  # 0.01% threshold
+    threshold = 0.01
     significant_predictions = [(coin, conf) for coin, conf in top_predictions if conf > threshold]
-    
-    # Calculate total shown percentage
     total_shown = sum(conf for _, conf in significant_predictions)
     
-    # Print predictions with different colors based on confidence
     for coin, conf in significant_predictions:
         if conf >= 70:
             color = Fore.GREEN
@@ -147,17 +136,13 @@ def test():
         
         print(f"{color}{coin}: {Style.BRIGHT}{conf:.3f}%{Style.RESET_ALL}")
     
-    # Show remaining percentage if any
     remaining = 100 - total_shown
     if remaining > 0:
         print(f"{Fore.CYAN}Other possibilities: {Style.BRIGHT}{remaining:.3f}%{Style.RESET_ALL}")
     
     print("\n" + "="*50 + "\n")
 
-
-def train():
-    print("Training called\nCategorising data")
-    
+def pre_train_checks(dataset_dir, name_of_coin_file):
     if os.path.exists("model.keras"):
         print("Model already exists, deleting model.keras")
         os.remove("model.keras")
@@ -168,15 +153,8 @@ def train():
         os.remove("label_mapping.json")
         print("Label mapping deleted")
     
-    dataset_dir = "dataset"
-    categories = ["train", "test"]
-    name_of_coin_file = "cat_to_name.json"
-    IMG_SIZE = 100
-    training_data = []
-    
     print(f"{Fore.CYAN}Checking directories and files exist{Style.RESET_ALL}")
     
-    # Check directories and files exist
     if not os.path.exists(dataset_dir):
         print("Dataset directory does not exist")
         return
@@ -185,24 +163,33 @@ def train():
         print("Json file does not exist")
         return
         
-    # Read coin names
     print("Reading coin names...")
     with open(name_of_coin_file, 'r') as f:
         coin_names = json.load(f)
         
     print(f"{Fore.GREEN}Coin names read successfully{Style.RESET_ALL}")
     
-    print("Reading training data...")
+    return coin_names
+
+
+def train():
+    print("Training called\nCategorising data")
     
-    # Read images and assign numerical labels directly
+    dataset_dir = "dataset"
+    categories = ["train", "test"]
+    name_of_coin_file = "cat_to_name.json"
+    IMG_SIZE = 100
+    training_data = []
+    coin_names = pre_train_checks(dataset_dir, name_of_coin_file)
     label_to_index = {}
     current_label = 0
+    
+    print("Reading training data...")
     
     for i in range(1, 212):
         path = os.path.join(dataset_dir, categories[0], str(i))
         coin_name = coin_names[str(i)]
         
-        # Assign numerical label
         if coin_name not in label_to_index:
             label_to_index[coin_name] = current_label
             current_label += 1
@@ -210,7 +197,6 @@ def train():
             print(f"{Fore.GREEN}Assigning label {current_label}/211{Style.RESET_ALL}", end='\r', flush=True)
             
         for img in os.listdir(path):
-            # Skip .DS_Store and other hidden files
             if img.startswith('.'):
                 continue
             
@@ -226,52 +212,45 @@ def train():
                 print(f"Error processing {img_path}: {str(e)}")
                 continue
     
-    print()  # Add this after the loop to move to next line
+    print()
+    
     if len(training_data) == 0:
         print("No training data found")
         return
     
     print(f"Data read successfully. Total samples: {len(training_data)}")
     
-    # Prepare data for training
     X = np.array([i[0] for i in training_data]).reshape(-1, IMG_SIZE, IMG_SIZE, 1)
     y = np.array([i[1] for i in training_data])
     X = X / 255.0
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     
     print("Data split successfully")
-    
     print(f"{Fore.CYAN}Creating optimised model architecture...{Style.RESET_ALL}")
+
+    base_model = MobileNet(input_shape=(IMG_SIZE, IMG_SIZE, 1), include_top=False, weights=None)
     model = Sequential([
-        Conv2D(32, (3, 3), activation='relu', padding='same', 
-               input_shape=(IMG_SIZE, IMG_SIZE, 1)),
-        BatchNormalization(),
-        MaxPooling2D((2, 2)),
-        
-        Conv2D(64, (3, 3), activation='relu', padding='same'),
-        BatchNormalization(),
-        MaxPooling2D((2, 2)),
-        
-        Flatten(),  
+        base_model,
+        Flatten(),
         Dense(128, activation='relu'),
-        BatchNormalization(),
         Dropout(0.5),
         Dense(len(label_to_index), activation='softmax')
     ])
 
     print(f"{Fore.CYAN}Compiling model with performance optimizations...{Style.RESET_ALL}")
-    model.compile(
-        optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
-        loss='sparse_categorical_crossentropy',
-        metrics=['accuracy']
-    )
+    model.compile(optimizer='adam',
+              loss='sparse_categorical_crossentropy',
+              metrics=['accuracy'])
+    print(f"{Fore.GREEN}Model compiled successfully{Style.RESET_ALL}")
     
+    print(f"{Fore.CYAN}Setting up learning rate reduction...{Style.RESET_ALL}")
     reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(
         monitor='val_loss',
         factor=0.2,
         patience=5,
         min_lr=0.00001
     )
+    print(f"{Fore.GREEN}Learning rate reduction set up{Style.RESET_ALL}")
 
     print(f"{Fore.CYAN}Setting up training parameters...{Style.RESET_ALL}")
     early_stopping = tf.keras.callbacks.EarlyStopping(
@@ -279,6 +258,7 @@ def train():
         patience=5,
         restore_best_weights=True
     )
+    print(f"{Fore.GREEN}Early stopping set up{Style.RESET_ALL}")
 
     print(f"{Fore.GREEN}Starting optimized training...{Style.RESET_ALL}")
     history = model.fit(
@@ -289,8 +269,9 @@ def train():
         callbacks=[early_stopping, reduce_lr]
     )
     
-    print("Model trained successfully")
+    print(f"{Fore.GREEN}Model trained successfully{Style.RESET_ALL}")
     
+    print(f"{Fore.CYAN}Saving model...{Style.RESET_ALL}")
     print("Saving model...")
     tf.keras.models.save_model(
         model,
@@ -302,8 +283,8 @@ def train():
     with open('label_mapping.json', 'w') as f:
         json.dump(label_to_index, f)
     
-    print(f"Model saved to model.keras")
-    print("Label mapping saved to label_mapping.json")
+    print(f"{Fore.GREEN}Model saved to model.keras{Style.RESET_ALL}")
+    print(f"{Fore.GREEN}Label mapping saved to label_mapping.json{Style.RESET_ALL}")
     
     # Plot training history
     plt.plot(history.history['accuracy'], label='Training Accuracy')
@@ -316,7 +297,7 @@ def train():
 
 
 def preprocess_image(img_array, IMG_SIZE=100):
-    if len(img_array.shape) == 3:  # Color image
+    if len(img_array.shape) == 3:
         img_array = cv2.cvtColor(img_array, cv2.COLOR_BGR2GRAY)
     img_array = cv2.resize(img_array, (IMG_SIZE, IMG_SIZE))
     img_array = img_array.astype('float32') / 255.0
