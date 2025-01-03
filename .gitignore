@@ -1,6 +1,6 @@
 dataset/
 *.h5
-note_to_self.txt
+setup_locally.sh
 *.pyc
 gui.py
 *.keras

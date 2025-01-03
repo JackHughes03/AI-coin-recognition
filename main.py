@@ -233,40 +233,68 @@ def train():
     
     print(f"{Fore.CYAN}Creating optimised model architecture...{Style.RESET_ALL}")
     model = Sequential([
-        Conv2D(32, (3, 3), activation='relu', padding='same', 
+        Conv2D(64, (3, 3), activation='relu', padding='same', 
                input_shape=(IMG_SIZE, IMG_SIZE, 1)),
         MaxPooling2D((2, 2)),
         
-        Conv2D(64, (3, 3), activation='relu', padding='same'),
+        Conv2D(128, (3, 3), activation='relu', padding='same'),
+        MaxPooling2D((2, 2)),
+        
+        Conv2D(256, (3, 3), activation='relu', padding='same'),
+        MaxPooling2D((2, 2)),
+        
+        Conv2D(512, (3, 3), activation='relu', padding='same'),
         MaxPooling2D((2, 2)),
         
         Flatten(),
-        Dense(128, activation='relu'),
+        Dense(512, activation='relu'),
         Dropout(0.5),
+        Dense(256, activation='relu'),
+        Dropout(0.3),
         Dense(len(label_to_index), activation='softmax')
     ])
 
     print(f"{Fore.CYAN}Compiling model with performance optimizations...{Style.RESET_ALL}")
     model.compile(
-        optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
+        optimizer=tf.keras.optimizers.Adam(learning_rate=0.0001),
         loss='sparse_categorical_crossentropy',
         metrics=['accuracy']
     )
 
+    # Add data augmentation
+    data_augmentation = tf.keras.Sequential([
+        tf.keras.layers.RandomRotation(0.2),
+        tf.keras.layers.RandomZoom(0.2),
+        tf.keras.layers.RandomBrightness(0.2),
+        tf.keras.layers.RandomContrast(0.2),
+    ])
+
+    # Prepare augmented training data
+    X_train_augmented = np.concatenate([X_train, data_augmentation(X_train, training=True)], axis=0)
+    y_train_augmented = np.concatenate([y_train, y_train], axis=0)
+
     print(f"{Fore.CYAN}Setting up training parameters...{Style.RESET_ALL}")
     early_stopping = tf.keras.callbacks.EarlyStopping(
         monitor='val_accuracy',
-        patience=5,
+        patience=10,
         restore_best_weights=True
+    )
+
+    # Add learning rate reduction
+    reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(
+        monitor='val_loss',
+        factor=0.2,
+        patience=5,
+        min_lr=0.00001
     )
 
     print(f"{Fore.GREEN}Starting optimized training...{Style.RESET_ALL}")
     history = model.fit(
-        X_train, y_train,
-        epochs=30,
+        X_train_augmented, y_train_augmented,
+        epochs=50,
         batch_size=32,
         validation_data=(X_test, y_test),
-        callbacks=[early_stopping]
+        callbacks=[early_stopping, reduce_lr]
     )
     
     print("Model trained successfully")
