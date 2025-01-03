@@ -6,7 +6,6 @@ import json
 from sklearn.model_selection import train_test_split
 from keras.models import Sequential
 from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout, BatchNormalization
-from keras.applications import MobileNet
 import tensorflow as tf
 from sklearn.preprocessing import LabelEncoder
 from colorama import init, Fore, Style
@@ -227,12 +226,20 @@ def train():
     
     print("Data split successfully")
     print(f"{Fore.CYAN}Creating optimised model architecture...{Style.RESET_ALL}")
-
-    base_model = MobileNet(input_shape=(IMG_SIZE, IMG_SIZE, 1), include_top=False, weights=None)
+    
     model = Sequential([
-        base_model,
-        Flatten(),
+        Conv2D(32, (3, 3), activation='relu', padding='same', 
+               input_shape=(IMG_SIZE, IMG_SIZE, 1)),
+        BatchNormalization(),
+        MaxPooling2D((2, 2)),
+        
+        Conv2D(64, (3, 3), activation='relu', padding='same'),
+        BatchNormalization(),
+        MaxPooling2D((2, 2)),
+        
+        Flatten(),  
         Dense(128, activation='relu'),
+        BatchNormalization(),
         Dropout(0.5),
         Dense(len(label_to_index), activation='softmax')
     ])
